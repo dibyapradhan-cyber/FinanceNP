@@ -1,0 +1,617 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0a0c10;--bg2:#111318;--bg3:#181b22;--bg4:#1e2229;
+--border:#2a2f3a;--border2:#363c4a;
+--text:#e8eaf0;--text2:#8b90a0;--text3:#555c6e;
+--green:#00d084;--green2:#00a86b;--green3:rgba(0,208,132,0.12);
+--red:#ff4757;--red2:#cc2f3e;--red3:rgba(255,71,87,0.12);
+--blue:#3b82f6;--blue2:#1d4ed8;--blue3:rgba(59,130,246,0.12);
+--amber:#f59e0b;--amber2:rgba(245,158,11,0.12);
+--purple:#a855f7;--purple3:rgba(168,85,247,0.12);
+--mono:'IBM Plex Mono',monospace;
+--sans:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.4;min-height:100vh}
+.dash{display:grid;grid-template-rows:auto auto 1fr auto;gap:0;height:100vh;min-height:700px}
+
+/* TOP BAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:16px;height:44px;flex-shrink:0}
+.logo{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);letter-spacing:2px;margin-right:8px}
+.market-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.time-display{font-family:var(--mono);font-size:12px;color:var(--text2);margin-left:auto}
+.session-badge{background:var(--green3);border:1px solid var(--green2);color:var(--green);padding:2px 8px;border-radius:3px;font-size:10px;font-family:var(--mono);letter-spacing:1px}
+.session-badge.closed{background:var(--red3);border-color:var(--red2);color:var(--red)}
+
+/* INDICES BAR */
+.indices-bar{background:var(--bg3);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:0;overflow-x:auto;height:54px;flex-shrink:0}
+.idx{display:flex;flex-direction:column;padding:0 20px;border-right:1px solid var(--border);cursor:pointer;transition:background 0.15s;min-width:160px}
+.idx:first-child{padding-left:0}
+.idx:hover{background:var(--bg4)}
+.idx.active{background:var(--bg4);border-bottom:2px solid var(--blue)}
+.idx-name{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase}
+.idx-val{font-size:16px;font-weight:600;font-family:var(--mono)}
+.idx-chg{font-size:11px;font-family:var(--mono)}
+.up{color:var(--green)}.down{color:var(--red)}.neu{color:var(--text2)}
+
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:280px 1fr 260px;gap:0;overflow:hidden;flex:1;min-height:0}
+
+/* WATCHLIST */
+.panel{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title{font-size:10px;font-family:var(--mono);letter-spacing:1.5px;color:var(--text3);text-transform:uppercase}
+.panel-body{overflow-y:auto;flex:1}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-track{background:transparent}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2)}
+.stock-row{display:grid;grid-template-columns:1fr auto;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;align-items:center}
+.stock-row:hover,.stock-row.selected{background:var(--bg4)}
+.stock-row.selected{border-left:2px solid var(--blue)}
+.s-sym{font-family:var(--mono);font-size:12px;font-weight:600}
+.s-name{font-size:10px;color:var(--text3);margin-top:1px}
+.s-price{font-family:var(--mono);font-size:13px;font-weight:500;text-align:right}
+.s-chg{font-size:10px;font-family:var(--mono);text-align:right}
+.s-vol{font-size:9px;color:var(--text3);font-family:var(--mono);text-align:right}
+.mini-bar{height:2px;margin-top:4px;border-radius:1px;background:var(--border);position:relative;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:1px;transition:width 0.5s}
+
+/* CHART AREA */
+.chart-panel{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.chart-hdr{background:var(--bg2);padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.chart-sym{font-family:var(--mono);font-size:18px;font-weight:600}
+.chart-price-big{font-family:var(--mono);font-size:22px;font-weight:600}
+.chart-chg-big{font-family:var(--mono);font-size:13px}
+.tf-btn{font-size:10px;font-family:var(--mono);padding:3px 8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;border-radius:3px;transition:all 0.1s}
+.tf-btn.active,.tf-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue3)}
+.chart-area{flex:1;padding:8px 0;position:relative;overflow:hidden;min-height:0}
+.chart-area canvas{display:block}
+
+/* INDICATORS STRIP */
+.indicators-strip{background:var(--bg2);border-top:1px solid var(--border);padding:8px 16px;display:flex;gap:20px;flex-shrink:0;flex-wrap:wrap}
+.ind-item{display:flex;flex-direction:column;gap:1px}
+.ind-label{font-size:9px;font-family:var(--mono);color:var(--text3);letter-spacing:0.5px;text-transform:uppercase}
+.ind-val{font-size:12px;font-family:var(--mono);font-weight:500}
+.ind-signal{font-size:9px;font-family:var(--mono);padding:1px 5px;border-radius:2px}
+.sig-buy{background:var(--green3);color:var(--green)}
+.sig-sell{background:var(--red3);color:var(--red)}
+.sig-neu{background:var(--bg4);color:var(--text2)}
+
+/* RIGHT PANEL */
+.right-panel{background:var(--bg2);display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{flex:1;padding:9px 0;text-align:center;font-size:10px;font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--text2);transition:all 0.1s;border-bottom:2px solid transparent}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue3)}
+.tab-content{flex:1;overflow-y:auto;display:none}
+.tab-content.active{display:block}
+.tab-content::-webkit-scrollbar{width:3px}
+.tab-content::-webkit-scrollbar-thumb{background:var(--border2)}
+
+/* NEWS */
+.news-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+.news-item:hover{background:var(--bg4)}
+.news-impact{display:inline-block;font-size:8px;font-family:var(--mono);padding:1px 5px;border-radius:2px;margin-bottom:4px;letter-spacing:1px}
+.imp-high{background:var(--red3);color:var(--red)}
+.imp-med{background:var(--amber2);color:var(--amber)}
+.imp-low{background:var(--blue3);color:var(--blue)}
+.news-headline{font-size:11px;line-height:1.45;color:var(--text)}
+.news-meta{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:3px}
+
+/* ORDER BOOK */
+.ob-hdr{display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px 14px;font-size:9px;font-family:var(--mono);color:var(--text3);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.ob-row{display:grid;grid-template-columns:1fr 1fr 1fr;padding:4px 14px;font-size:11px;font-family:var(--mono);position:relative;overflow:hidden}
+.ob-row .bg-bar{position:absolute;top:0;bottom:0;opacity:0.12;z-index:0}
+.ob-row span{position:relative;z-index:1}
+.ob-mid{padding:6px 14px;text-align:center;font-family:var(--mono);font-size:13px;font-weight:600;background:var(--bg4);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.stat-cell{padding:8px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat-cell:nth-child(even){border-right:none}
+.stat-label{font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.stat-val{font-size:13px;font-family:var(--mono);font-weight:500;margin-top:2px}
+
+/* STATUS BAR */
+.statusbar{background:var(--bg3);border-top:1px solid var(--border);padding:4px 16px;display:flex;align-items:center;gap:20px;height:26px;flex-shrink:0}
+.sb-item{font-size:9px;font-family:var(--mono);color:var(--text3);display:flex;gap:6px}
+.sb-item span{color:var(--text2)}
+.refresh-indicator{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:9px;font-family:var(--mono);color:var(--text3)}
+.refresh-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 3s infinite}
+</style>
+
+<div class="dash">
+
+<div class="topbar">
+  <div class="logo">NEPSE</div>
+  <div class="market-pill"><div class="dot" id="mktDot"></div><span id="mktStatus" style="color:var(--green)">OPEN</span></div>
+  <div class="session-badge" id="sessionBadge">REGULAR SESSION</div>
+  <div style="display:flex;gap:16px;margin-left:16px">
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text2)">ADV <span style="color:var(--green)" id="adv">142</span></div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text2)">DEC <span style="color:var(--red)" id="dec">87</span></div>
+    <div style="font-size:11px;font-family:var(--mono);color:var(--text2)">UNCH <span style="color:var(--text2)" id="unc">23</span></div>
+  </div>
+  <div class="time-display" id="clock">--:--:-- NST</div>
+</div>
+
+<div class="indices-bar">
+  <div class="idx active" onclick="selectIndex(0)">
+    <div class="idx-name">NEPSE</div>
+    <div class="idx-val up" id="i0v">2,398.54</div>
+    <div class="idx-chg up" id="i0c">▲ 18.32 (+0.77%)</div>
+  </div>
+  <div class="idx" onclick="selectIndex(1)">
+    <div class="idx-name">SENSITIVE</div>
+    <div class="idx-val up" id="i1v">414.28</div>
+    <div class="idx-chg up" id="i1c">▲ 2.14 (+0.52%)</div>
+  </div>
+  <div class="idx" onclick="selectIndex(2)">
+    <div class="idx-name">FLOAT</div>
+    <div class="idx-val up" id="i2v">181.73</div>
+    <div class="idx-chg up" id="i2c">▲ 0.98 (+0.54%)</div>
+  </div>
+  <div class="idx" onclick="selectIndex(3)">
+    <div class="idx-name">BANKING</div>
+    <div class="idx-val up" id="i3v">1,512.40</div>
+    <div class="idx-chg up" id="i3c">▲ 11.20 (+0.75%)</div>
+  </div>
+  <div class="idx" onclick="selectIndex(4)">
+    <div class="idx-name">HYDROPOWER</div>
+    <div class="idx-val down" id="i4v">2,834.17</div>
+    <div class="idx-chg down" id="i4c">▼ 14.30 (-0.50%)</div>
+  </div>
+  <div class="idx" onclick="selectIndex(5)">
+    <div class="idx-name">MICROFINANCE</div>
+    <div class="idx-val down" id="i5v">3,124.88</div>
+    <div class="idx-chg down" id="i5c">▼ 22.10 (-0.70%)</div>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-left:20px;flex-shrink:0">
+    <div style="font-size:10px;font-family:var(--mono);color:var(--text3)">TURNOVER</div>
+    <div style="font-size:13px;font-family:var(--mono);font-weight:600;color:var(--amber)" id="turnover">Rs 4.82B</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="panel">
+    <div class="panel-hdr">
+      <div class="panel-title">Watchlist</div>
+      <div style="font-size:9px;font-family:var(--mono);color:var(--text3)" id="watchCount">25 stocks</div>
+    </div>
+    <div style="padding:6px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;font-size:9px;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">
+      <span>Symbol</span><span style="text-align:right">LTP</span><span style="text-align:right">Chg%</span>
+    </div>
+    <div class="panel-body" id="watchlist"></div>
+  </div>
+
+  <div class="chart-panel">
+    <div class="chart-hdr">
+      <div>
+        <div class="chart-sym" id="chartSym">NABIL</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="chartName">Nabil Bank Limited</div>
+      </div>
+      <div style="margin-left:12px">
+        <div class="chart-price-big up" id="chartPrice">1,284.00</div>
+        <div class="chart-chg-big up" id="chartChg">▲ 18.00 (+1.42%)</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:4px;align-items:center">
+        <button class="tf-btn active" onclick="setTF('5m',this)">5m</button>
+        <button class="tf-btn" onclick="setTF('15m',this)">15m</button>
+        <button class="tf-btn" onclick="setTF('1h',this)">1h</button>
+        <button class="tf-btn" onclick="setTF('1d',this)">1D</button>
+      </div>
+    </div>
+    <div class="chart-area" id="chartArea">
+      <canvas id="priceChart"></canvas>
+      <canvas id="volumeChart" style="position:absolute;bottom:0;left:0;right:0"></canvas>
+    </div>
+    <div class="indicators-strip" id="indicators"></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('news',this)">News</div>
+      <div class="tab" onclick="switchTab('book',this)">Book</div>
+      <div class="tab" onclick="switchTab('stats',this)">Stats</div>
+    </div>
+    <div class="tab-content active" id="tab-news"></div>
+    <div class="tab-content" id="tab-book">
+      <div class="ob-hdr"><span>Price</span><span style="text-align:center">Qty</span><span style="text-align:right">Orders</span></div>
+      <div id="askBook"></div>
+      <div class="ob-mid" id="obMid">1,284.00</div>
+      <div id="bidBook"></div>
+    </div>
+    <div class="tab-content" id="tab-stats">
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar">
+  <div class="sb-item">MKT CAP <span id="mktcap">Rs 3.42T</span></div>
+  <div class="sb-item">52W HIGH <span id="w52h" class="up">—</span></div>
+  <div class="sb-item">52W LOW <span id="w52l" class="down">—</span></div>
+  <div class="sb-item">VWAP <span id="vwap">—</span></div>
+  <div class="sb-item">BETA <span id="beta">—</span></div>
+  <div class="refresh-indicator"><div class="refresh-dot"></div>LIVE · Refreshing every 5s</div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const STOCKS = [
+  {sym:'NABIL',name:'Nabil Bank Ltd',sector:'Banking',base:1266,vol:14200,beta:0.92},
+  {sym:'NICA',name:'NIC Asia Bank',sector:'Banking',base:842,vol:22100,beta:0.88},
+  {sym:'GBIME',name:'Global IME Bank',sector:'Banking',base:334,vol:38700,beta:0.85},
+  {sym:'ADBL',name:'Agriculture Dev Bank',sector:'Banking',base:448,vol:17500,beta:0.78},
+  {sym:'SANIMA',name:'Sanima Bank Ltd',sector:'Banking',base:378,vol:12300,beta:0.82},
+  {sym:'NBL',name:'Nepal Bank Limited',sector:'Banking',base:186,vol:45600,beta:1.12},
+  {sym:'HIDCL',name:'Hydroelectricity Inv Dev',sector:'Hydropower',base:213,vol:88200,beta:1.24},
+  {sym:'NHPC',name:'Nyadi Hydropower',sector:'Hydropower',base:124,vol:33100,beta:1.18},
+  {sym:'UPPER',name:'Upper Tamakoshi Hydro',sector:'Hydropower',base:198,vol:29400,beta:1.08},
+  {sym:'DHPL',name:'Dolti Power Ltd',sector:'Hydropower',base:88,vol:41200,beta:1.35},
+  {sym:'NLIC',name:'Nepal Life Insurance',sector:'Insurance',base:1840,vol:8900,beta:0.72},
+  {sym:'LICN',name:'Life Insurance Corp Nepal',sector:'Insurance',base:1620,vol:6700,beta:0.68},
+  {sym:'SLICL',name:'Surya Life Insurance',sector:'Insurance',base:2140,vol:5400,beta:0.65},
+  {sym:'SHIVAM',name:'Shivam Cements Ltd',sector:'Manufacturing',base:186,vol:24800,beta:1.41},
+  {sym:'BOUDDHA',name:'Bouddha Temple Holdings',sector:'Hotels',base:1380,vol:3200,beta:1.55},
+  {sym:'MFIL',name:'Muktinath Finance Ltd',sector:'Finance',base:228,vol:19600,beta:1.28},
+  {sym:'GMFIL',name:'Global IME Microfinance',sector:'Microfinance',base:1240,vol:7800,beta:1.32},
+  {sym:'SWBBL',name:'Swabalamban Bikash Bank',sector:'Dev Bank',base:312,vol:15400,beta:1.15},
+  {sym:'LBBL',name:'Lumbini Bikash Bank',sector:'Dev Bank',base:278,vol:11200,beta:1.08},
+  {sym:'CHDC',name:'Chilime Hydropower',sector:'Hydropower',base:542,vol:9800,beta:0.95},
+  {sym:'NTC',name:'Nepal Telecom',sector:'Telecom',base:984,vol:13700,beta:0.62},
+  {sym:'MMFDB',name:'Mahila Microfinance Dev Bank',sector:'Microfinance',base:1640,vol:4200,beta:1.44},
+  {sym:'NMBMF',name:'NMB Microfinance',sector:'Microfinance',base:1820,vol:3800,beta:1.38},
+  {sym:'KMCDB',name:'Kankai Microfinance Dev Bank',sector:'Microfinance',base:920,vol:5600,beta:1.22},
+  {sym:'EBL',name:'Everest Bank Ltd',sector:'Banking',base:1580,vol:10200,beta:0.76}
+];
+
+const NEWS = [
+  {impact:'HIGH',headline:'NRB raises bank rate to 7.5% — banking stocks under pressure ahead of policy review',source:'Mero Lagani',time:'11:30 AM',ticker:'BANKING'},
+  {impact:'HIGH',headline:'SEBON approves IPO of three hydropower companies for Q1 FY2082',source:'Share Sansar',time:'10:45 AM',ticker:'HIDCL'},
+  {impact:'MED',headline:'Nepal Telecom posts Rs 9.2B profit for fiscal year 2080/81, beats estimates',source:'NRB Data',time:'10:00 AM',ticker:'NTC'},
+  {impact:'MED',headline:'NEPSE circuit breaker activated twice in morning session on volume surge',source:'Online Khabar',time:'09:40 AM',ticker:'INDEX'},
+  {impact:'HIGH',headline:'Global IME Bank announces 15% bonus share for fiscal year 2080/81',source:'Share Sansar',time:'09:15 AM',ticker:'GBIME'},
+  {impact:'LOW',headline:'SEBON updates margin trading rules — eligible scrips list expanded to 148 stocks',source:'SEBON',time:'09:00 AM',ticker:'MKT'},
+  {impact:'MED',headline:'Foreign portfolio investor limit raised to 35% in banking sector',source:'NRB',time:'08:30 AM',ticker:'BANKING'},
+  {impact:'LOW',headline:'NEPSE introduces T+2 settlement for select manufacturing scrips from next week',source:'NEPSE',time:'08:00 AM',ticker:'MKT'},
+  {impact:'HIGH',headline:'Upper Tamakoshi plant achieves full 456 MW capacity — record generation reported',source:'NEA',time:'07:45 AM',ticker:'UPPER'},
+  {impact:'MED',headline:'Nepal Life Insurance announces rights share at 1:1 ratio, Rs 100 par value',source:'Mero Lagani',time:'07:30 AM',ticker:'NLIC'},
+];
+
+let prices={},changes={},histories={};
+let selectedStock=0;
+let priceChart=null,volumeChart=null;
+let tf='5m';
+
+function rnd(min,max){return Math.random()*(max-min)+min}
+function fmt(n){return n.toFixed(2)}
+
+function initPrices(){
+  STOCKS.forEach((s,i)=>{
+    const chgPct=rnd(-3,3);
+    prices[s.sym]=+(s.base*(1+chgPct/100)).toFixed(2);
+    changes[s.sym]=+(chgPct).toFixed(2);
+    histories[s.sym]=generateHistory(s.base,48);
+  });
+}
+
+function generateHistory(base,bars){
+  let h=[],v=base;
+  for(let i=0;i<bars;i++){
+    v=v*(1+rnd(-0.008,0.008));
+    h.push(+v.toFixed(2));
+  }
+  return h;
+}
+
+function updatePrices(){
+  STOCKS.forEach(s=>{
+    const tick=rnd(-0.6,0.6)*s.beta;
+    prices[s.sym]=+(prices[s.sym]*(1+tick/100)).toFixed(2);
+    changes[s.sym]=+((prices[s.sym]/s.base-1)*100).toFixed(2);
+    const arr=histories[s.sym];
+    arr.push(prices[s.sym]);
+    if(arr.length>80)arr.shift();
+  });
+  renderWatchlist();
+  updateChartData();
+  updateIndices();
+  updateIndicators();
+  updateOrderBook();
+}
+
+function renderWatchlist(){
+  const el=document.getElementById('watchlist');
+  el.innerHTML=STOCKS.map((s,i)=>{
+    const p=prices[s.sym];
+    const c=changes[s.sym];
+    const cls=c>=0?'up':'down';
+    const pctFill=Math.min(Math.abs(c)/3*100,100);
+    const fillColor=c>=0?'var(--green)':'var(--red)';
+    return `<div class="stock-row ${i===selectedStock?'selected':''}" onclick="selectStock(${i})">
+      <div>
+        <div class="s-sym ${cls}">${s.sym}</div>
+        <div class="s-name">${s.sector}</div>
+        <div class="mini-bar"><div class="mini-bar-fill" style="width:${pctFill}%;background:${fillColor}"></div></div>
+      </div>
+      <div>
+        <div class="s-price">${fmt(p)}</div>
+        <div class="s-chg ${cls}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</div>
+        <div class="s-vol">${(s.vol*rnd(0.8,1.2)/1000).toFixed(1)}K</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectStock(i){
+  selectedStock=i;
+  const s=STOCKS[i];
+  document.getElementById('chartSym').textContent=s.sym;
+  document.getElementById('chartName').textContent=s.name;
+  updateChartData();
+  updateStatsPanel();
+  renderWatchlist();
+}
+
+function updateChartData(){
+  const s=STOCKS[selectedStock];
+  const p=prices[s.sym];
+  const c=changes[s.sym];
+  const cls=c>=0?'up':'down';
+  document.getElementById('chartPrice').className='chart-price-big '+cls;
+  document.getElementById('chartPrice').textContent=fmt(p);
+  document.getElementById('chartChg').className='chart-chg-big '+cls;
+  document.getElementById('chartChg').textContent=`${c>=0?'▲':'▼'} ${fmt(Math.abs((p-s.base)))} (${c>=0?'+':''}${c.toFixed(2)}%)`;
+  document.getElementById('vwap').textContent=fmt(p*rnd(0.998,1.002));
+  document.getElementById('w52h').textContent=fmt(s.base*rnd(1.25,1.45));
+  document.getElementById('w52l').textContent=fmt(s.base*rnd(0.55,0.75));
+  document.getElementById('beta').textContent=s.beta.toFixed(2);
+  if(priceChart){
+    const h=histories[s.sym];
+    priceChart.data.labels=h.map((_,i)=>i);
+    priceChart.data.datasets[0].data=h;
+    const col=c>=0?'#00d084':'#ff4757';
+    const colFade=c>=0?'rgba(0,208,132,0.15)':'rgba(255,71,87,0.15)';
+    priceChart.data.datasets[0].borderColor=col;
+    priceChart.data.datasets[0].backgroundColor=colFade;
+    priceChart.update('none');
+    volumeChart.data.labels=h.map((_,i)=>i);
+    volumeChart.data.datasets[0].data=h.map(()=>Math.round(rnd(1000,8000)));
+    volumeChart.data.datasets[0].backgroundColor=col+'88';
+    volumeChart.update('none');
+  }
+}
+
+function updateIndices(){
+  const bases=[2380,410,179.5,1500,2848,3147];
+  for(let i=0;i<6;i++){
+    const chg=rnd(-0.5,0.8);
+    const v=bases[i]*(1+chg/100);
+    const el=document.getElementById('i'+i+'v');
+    const ec=document.getElementById('i'+i+'c');
+    const up=chg>=0;
+    el.className='idx-val '+(up?'up':'down');
+    el.textContent=v.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});
+    ec.className='idx-chg '+(up?'up':'down');
+    ec.textContent=`${up?'▲':'▼'} ${(v*Math.abs(chg)/100).toFixed(2)} (${up?'+':''}${chg.toFixed(2)}%)`;
+  }
+  const to=(4.2+rnd(-0.3,0.8)).toFixed(2);
+  document.getElementById('turnover').textContent=`Rs ${to}B`;
+}
+
+function calcRSI(data,period=14){
+  if(data.length<period+1)return 50;
+  let gains=0,losses=0;
+  for(let i=data.length-period;i<data.length;i++){
+    const d=data[i]-data[i-1];
+    if(d>0)gains+=d;else losses-=d;
+  }
+  const rs=gains/losses;
+  return losses===0?100:+(100-100/(1+rs)).toFixed(1);
+}
+
+function calcMACD(data){
+  if(data.length<26)return{macd:0,signal:0,hist:0};
+  const ema12=data.slice(-12).reduce((a,b)=>a+b,0)/12;
+  const ema26=data.slice(-26).reduce((a,b)=>a+b,0)/26;
+  const macd=+(ema12-ema26).toFixed(2);
+  const signal=+(macd*0.9).toFixed(2);
+  return{macd,signal,hist:+(macd-signal).toFixed(2)};
+}
+
+function calcBB(data,period=20){
+  if(data.length<period)return{upper:0,middle:0,lower:0};
+  const slice=data.slice(-period);
+  const mean=slice.reduce((a,b)=>a+b,0)/period;
+  const std=Math.sqrt(slice.map(x=>(x-mean)**2).reduce((a,b)=>a+b,0)/period);
+  return{upper:+(mean+2*std).toFixed(2),middle:+mean.toFixed(2),lower:+(mean-2*std).toFixed(2)};
+}
+
+function updateIndicators(){
+  const s=STOCKS[selectedStock];
+  const h=histories[s.sym];
+  const p=prices[s.sym];
+  const rsi=calcRSI(h);
+  const macd=calcMACD(h);
+  const bb=calcBB(h);
+  const sma20=+(h.slice(-20).reduce((a,b)=>a+b,0)/20).toFixed(2);
+  const sma50=h.length>=50?+(h.slice(-50).reduce((a,b)=>a+b,0)/50).toFixed(2):null;
+  const rsiSig=rsi>70?'SELL':rsi<30?'BUY':'NEUT';
+  const rsiCls=rsi>70?'sig-sell':rsi<30?'sig-buy':'sig-neu';
+  const macdSig=macd.hist>0?'BUY':'SELL';
+  const macdCls=macd.hist>0?'sig-buy':'sig-sell';
+  const bbSig=p>bb.upper?'SELL':p<bb.lower?'BUY':'NEUT';
+  const bbCls=p>bb.upper?'sig-sell':p<bb.lower?'sig-buy':'sig-neu';
+  const trend=p>sma20?'▲ BULLISH':'▼ BEARISH';
+  const trendCls=p>sma20?'up':'down';
+  document.getElementById('indicators').innerHTML=`
+    <div class="ind-item"><div class="ind-label">RSI(14)</div><div class="ind-val">${rsi}</div><div class="ind-signal ${rsiCls}">${rsiSig}</div></div>
+    <div class="ind-item"><div class="ind-label">MACD</div><div class="ind-val">${macd.macd}</div><div class="ind-signal ${macdCls}">${macdSig}</div></div>
+    <div class="ind-item"><div class="ind-label">BB Upper</div><div class="ind-val">${bb.upper}</div><div class="ind-signal ${bbCls}">${bbSig}</div></div>
+    <div class="ind-item"><div class="ind-label">BB Mid</div><div class="ind-val">${bb.middle}</div></div>
+    <div class="ind-item"><div class="ind-label">SMA(20)</div><div class="ind-val">${sma20}</div><div class="ind-signal ${trendCls}">${trend}</div></div>
+    ${sma50?`<div class="ind-item"><div class="ind-label">SMA(50)</div><div class="ind-val">${sma50}</div></div>`:''}
+    <div class="ind-item"><div class="ind-label">Signal</div><div class="ind-val" style="font-size:10px">${macd.hist>0&&rsi<70?'<span class="up">LONG ↑</span>':'<span class="down">WAIT ↓</span>'}</div></div>
+  `;
+}
+
+function updateOrderBook(){
+  const s=STOCKS[selectedStock];
+  const p=prices[s.sym];
+  const asks=[],bids=[];
+  for(let i=1;i<=6;i++){
+    asks.push({price:+(p+i*rnd(0.5,2)).toFixed(2),qty:Math.round(rnd(50,800)),orders:Math.round(rnd(1,12))});
+    bids.push({price:+(p-i*rnd(0.5,2)).toFixed(2),qty:Math.round(rnd(50,800)),orders:Math.round(rnd(1,12))});
+  }
+  const maxAsk=Math.max(...asks.map(a=>a.qty));
+  const maxBid=Math.max(...bids.map(b=>b.qty));
+  document.getElementById('obMid').textContent=fmt(p);
+  document.getElementById('askBook').innerHTML=asks.reverse().map(a=>`
+    <div class="ob-row">
+      <div class="bg-bar" style="right:0;width:${(a.qty/maxAsk*100).toFixed(0)}%;background:var(--red)"></div>
+      <span class="down">${fmt(a.price)}</span>
+      <span style="text-align:center;color:var(--text2)">${a.qty}</span>
+      <span style="text-align:right;color:var(--text3)">${a.orders}</span>
+    </div>`).join('');
+  document.getElementById('bidBook').innerHTML=bids.map(b=>`
+    <div class="ob-row">
+      <div class="bg-bar" style="left:0;width:${(b.qty/maxBid*100).toFixed(0)}%;background:var(--green)"></div>
+      <span class="up">${fmt(b.price)}</span>
+      <span style="text-align:center;color:var(--text2)">${b.qty}</span>
+      <span style="text-align:right;color:var(--text3)">${b.orders}</span>
+    </div>`).join('');
+}
+
+function updateStatsPanel(){
+  const s=STOCKS[selectedStock];
+  const p=prices[s.sym];
+  const c=changes[s.sym];
+  const items=[
+    ['Open',fmt(s.base*rnd(0.995,1.005))],
+    ['High',fmt(p*rnd(1.005,1.02))],
+    ['Low',fmt(p*rnd(0.98,0.995))],
+    ['Prev Close',fmt(s.base)],
+    ['Volume',Math.round(s.vol*rnd(0.8,1.3)).toLocaleString()],
+    ['Turnover','Rs '+(s.vol*p*rnd(0.8,1.3)/1e6).toFixed(2)+'M'],
+    ['Circuit High',fmt(s.base*1.05)],
+    ['Circuit Low',fmt(s.base*0.95)],
+    ['PE Ratio',(rnd(12,32)).toFixed(1)+'x'],
+    ['EPS','Rs '+(p/rnd(12,32)).toFixed(2)],
+    ['Book Value','Rs '+(p*rnd(0.6,0.9)).toFixed(2)],
+    ['Market Cap','Rs '+(p*rnd(50,400)*1e6/1e9).toFixed(2)+'B'],
+  ];
+  document.getElementById('statsGrid').innerHTML=items.map(([l,v])=>`
+    <div class="stat-cell"><div class="stat-label">${l}</div><div class="stat-val">${v}</div></div>
+  `).join('');
+}
+
+function renderNews(){
+  document.getElementById('tab-news').innerHTML=NEWS.map(n=>`
+    <div class="news-item">
+      <div><span class="news-impact imp-${n.impact.toLowerCase()}">${n.impact} IMPACT</span></div>
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-meta">${n.source} · ${n.time} · ${n.ticker}</div>
+    </div>`).join('');
+}
+
+function switchTab(name,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='book')updateOrderBook();
+  if(name==='stats')updateStatsPanel();
+}
+
+function selectIndex(i){
+  document.querySelectorAll('.idx').forEach((el,j)=>el.classList.toggle('active',i===j));
+}
+
+function setTF(t,btn){
+  tf=t;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function updateClock(){
+  const now=new Date();
+  const nst=new Date(now.getTime()+5.75*3600*1000);
+  const h=nst.getUTCHours().toString().padStart(2,'0');
+  const m=nst.getUTCMinutes().toString().padStart(2,'0');
+  const s=nst.getUTCSeconds().toString().padStart(2,'0');
+  document.getElementById('clock').textContent=`${h}:${m}:${s} NST`;
+  const isOpen=h>='11'&&(h<'15'||(h==='15'&&m<='00'));
+  const dot=document.getElementById('mktDot');
+  const status=document.getElementById('mktStatus');
+  const badge=document.getElementById('sessionBadge');
+  if(isOpen){
+    dot.style.background='var(--green)';status.style.color='var(--green)';
+    status.textContent='OPEN';badge.className='session-badge';badge.textContent='REGULAR SESSION';
+  }else{
+    dot.style.background='var(--red)';status.style.color='var(--red)';
+    status.textContent='CLOSED';badge.className='session-badge closed';badge.textContent='AFTER HOURS';
+  }
+}
+
+function initCharts(){
+  const s=STOCKS[selectedStock];
+  const h=histories[s.sym];
+  const c=changes[s.sym]>=0;
+  const col=c?'#00d084':'#ff4757';
+  const colFade=c?'rgba(0,208,132,0.15)':'rgba(255,71,87,0.15)';
+  const area=document.getElementById('chartArea');
+  const W=area.clientWidth,H=area.clientHeight;
+  const pc=document.getElementById('priceChart');
+  pc.width=W;pc.height=Math.round(H*0.72);
+  const vc=document.getElementById('volumeChart');
+  vc.width=W;vc.height=Math.round(H*0.24);
+  priceChart=new Chart(pc,{
+    type:'line',
+    data:{labels:h.map((_,i)=>i),datasets:[{data:h,borderColor:col,backgroundColor:colFade,borderWidth:1.5,fill:true,tension:0.2,pointRadius:0}]},
+    options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,backgroundColor:'#1e2229',borderColor:'#363c4a',borderWidth:1,titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11}}},scales:{x:{display:false},y:{position:'right',grid:{color:'rgba(42,47,58,0.8)'},ticks:{font:{family:'IBM Plex Mono',size:9},color:'#555c6e',maxTicksLimit:5}}}}
+  });
+  volumeChart=new Chart(vc,{
+    type:'bar',
+    data:{labels:h.map((_,i)=>i),datasets:[{data:h.map(()=>Math.round(rnd(1000,8000))),backgroundColor:col+'88',borderWidth:0}]},
+    options:{responsive:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}}}
+  });
+}
+
+function handleResize(){
+  if(!priceChart)return;
+  const area=document.getElementById('chartArea');
+  const W=area.clientWidth,H=area.clientHeight;
+  const pc=document.getElementById('priceChart');
+  pc.width=W;pc.height=Math.round(H*0.72);
+  const vc=document.getElementById('volumeChart');
+  vc.width=W;vc.height=Math.round(H*0.24);
+  priceChart.resize();volumeChart.resize();
+}
+
+initPrices();
+renderWatchlist();
+renderNews();
+updateIndicators();
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    initCharts();
+    updateChartData();
+    updateOrderBook();
+    updateStatsPanel();
+    updateClock();
+    setInterval(updateClock,1000);
+    setInterval(()=>{
+      updatePrices();
+      if(Math.random()<0.3){document.getElementById('adv').textContent=Math.round(rnd(110,180));document.getElementById('dec').textContent=Math.round(rnd(60,110));document.getElementById('unc').textContent=Math.round(rnd(10,40));}
+    },5000);
+  },100);
+});
+window.addEventListener('resize',handleResize);
+</script>
